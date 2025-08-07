@@ -25,19 +25,34 @@ class AdminController:
         self._audit_logs = audit_logs
 
     async def create_user(
-        self, session: AsyncSession, username: str, password: str, role: UserRole, full_name: str
+        self,
+        session: AsyncSession,
+        token: dict,
+        username: str,
+        password: str,
+        role: UserRole,
+        full_name: str,
     ) -> User:
         hashed_pass = sha256(password.encode()).hexdigest()
         model = User(username=username, password=hashed_pass, role=role, full_name=full_name)
         try:
             model = await self._users.create(session, model)
+            await self._audit_logs.create(
+                session, AuditLog(user_id=token["user_id"], action=f"User created: {username}")
+            )
         except ValueError as err:
             raise ServiceConflict(err) from err
         await session.commit()
         return model
 
     async def update_user(
-        self, session: AsyncSession, user_id: int, username: str, role: UserRole, full_name: str
+        self,
+        session: AsyncSession,
+        token: dict,
+        user_id: int,
+        username: str,
+        role: UserRole,
+        full_name: str,
     ) -> User:
         existing = await self._users.get_by_id(session, user_id)
         if not existing:
@@ -49,13 +64,16 @@ class AdminController:
 
         try:
             await self._users.update(session, existing)
+            await self._audit_logs.create(
+                session, AuditLog(user_id=token["user_id"], action=f"User updated: {username}")
+            )
         except ValueError as err:
             raise ServiceConflict(err) from err
 
         await session.commit()
         return existing
 
-    async def delete_user(self, session: AsyncSession, user_id: int) -> None:
+    async def delete_user(self, session: AsyncSession, token: dict, user_id: int) -> None:
         existing = await self._users.get_by_id(session, user_id)
 
         if not existing:
@@ -63,19 +81,30 @@ class AdminController:
 
         try:
             await self._users.delete(session, existing)
+            await self._audit_logs.create(
+                session,
+                AuditLog(user_id=token["user_id"], action=f"User deleted: {existing.username}"),
+            )
         except ValueError as err:
             raise ServiceConflict(err) from err
 
         await session.commit()
 
-    async def create_sw_type(self, session: AsyncSession, name: str) -> SoftwareType:
+    async def create_sw_type(self, session: AsyncSession, token: dict, name: str) -> SoftwareType:
         model = SoftwareType(name=name)
         try:
             model = await self._sw_types.create(session, model)
+            await self._audit_logs.create(
+                session, AuditLog(user_id=token["user_id"], action=f"Software type created: {name}")
+            )
         except ValueError as err:
             raise ServiceConflict(err) from err
         await session.commit()
         return model
 
     async def get_audit_logs(self, session: AsyncSession, limit: int) -> list[AuditLog]:
-        return await self._audit_logs.get_many(session, limit)
+        try:
+            models = await self._audit_logs.get_many(session, limit)
+        except ValueError as err:
+            raise ServiceConflict(err) from err
+        return models

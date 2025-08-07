@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.controllers.supervisor import SupervisorController
-from src.dependencies import get_rbac_session, get_supervisor_controller
+from src.dependencies import get_rbac_session, get_supervisor_controller, read_token
 
 
 router = APIRouter(prefix="/api", tags=["Supervisor"])
@@ -17,8 +17,9 @@ async def get_department_installed_software(
     dept_id: int,
     controller: SupervisorController = Depends(get_supervisor_controller),
     session: AsyncSession = Depends(get_rbac_session),
+    token: dict = Depends(read_token),
 ) -> Response:
-    models = await controller.get_dept_installed_sw(session, dept_id)
+    models = await controller.get_dept_installed_sw(session, token, dept_id)
     return JSONResponse(
         content=[
             {
@@ -41,8 +42,9 @@ async def get_department_assigned_computers(
     dept_id: int,
     controller: SupervisorController = Depends(get_supervisor_controller),
     session: AsyncSession = Depends(get_rbac_session),
+    token: dict = Depends(read_token),
 ) -> Response:
-    models = await controller.get_dept_computer_assignments(session, dept_id)
+    models = await controller.get_dept_computer_assignments(session, token, dept_id)
     return JSONResponse(
         content=[
             {
@@ -64,8 +66,9 @@ async def get_expiring_licenses(
     end_date: datetime,
     controller: SupervisorController = Depends(get_supervisor_controller),
     session: AsyncSession = Depends(get_rbac_session),
+    token: dict = Depends(read_token),
 ) -> Response:
-    models = await controller.get_expiring_licenses(session, start_date, end_date)
+    models = await controller.get_expiring_licenses(session, token, start_date, end_date)
     return JSONResponse(
         content=[
             {

@@ -68,12 +68,16 @@ def get_manager_controller():
         vendors=VendorRepo(),
         licenses=LicenseRepo(),
         installations=InstallationRepo(),
+        audit_logs=AuditLogRepo(),
     )
 
 
 def get_supervisor_controller():
     return SupervisorController(
-        settings=settings, departments=DepartmentRepo(), licenses=LicenseRepo()
+        settings=settings,
+        departments=DepartmentRepo(),
+        licenses=LicenseRepo(),
+        audit_logs=AuditLogRepo(),
     )
 
 

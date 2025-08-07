@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.controllers.admin import AdminController
-from src.dependencies import get_admin_controller, get_rbac_session
+from src.dependencies import get_admin_controller, get_rbac_session, read_token
 from src.enums import UserRole
 
 
@@ -18,8 +18,9 @@ async def create_user(
     full_name: str,
     controller: AdminController = Depends(get_admin_controller),
     session: AsyncSession = Depends(get_rbac_session),
+    token: dict = Depends(read_token),
 ) -> Response:
-    model = await controller.create_user(session, username, password, role, full_name)
+    model = await controller.create_user(session, token, username, password, role, full_name)
     return JSONResponse(
         content={
             "username": model.username,
@@ -39,8 +40,9 @@ async def update_user(
     full_name: str,
     controller: AdminController = Depends(get_admin_controller),
     session: AsyncSession = Depends(get_rbac_session),
+    token: dict = Depends(read_token),
 ) -> Response:
-    model = await controller.update_user(session, user_id, username, role, full_name)
+    model = await controller.update_user(session, token, user_id, username, role, full_name)
     return JSONResponse(
         content={
             "username": model.username,
@@ -57,8 +59,9 @@ async def delete_user(
     user_id: int,
     controller: AdminController = Depends(get_admin_controller),
     session: AsyncSession = Depends(get_rbac_session),
+    token: dict = Depends(read_token),
 ) -> Response:
-    await controller.delete_user(session, user_id)
+    await controller.delete_user(session, token, user_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
@@ -67,8 +70,9 @@ async def create_software_type(
     name: str,
     controller: AdminController = Depends(get_admin_controller),
     session: AsyncSession = Depends(get_rbac_session),
+    token: dict = Depends(read_token),
 ) -> Response:
-    model = await controller.create_sw_type(session, name)
+    model = await controller.create_sw_type(session, token, name)
     return JSONResponse(
         content={"name": model.name, "sw_type_id": model.sw_type_id},
         status_code=status.HTTP_201_CREATED,
@@ -87,6 +91,7 @@ async def get_audit_logs(
             {
                 "log_id": model.log_id,
                 "user_id": model.user_id,
+                "username": model.user.username,
                 "action": model.action,
                 "action_time": model.action_time.isoformat(),
             }

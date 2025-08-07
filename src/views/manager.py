@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.controllers.manager import ManagerController
-from src.dependencies import get_manager_controller, get_rbac_session
+from src.dependencies import get_manager_controller, get_rbac_session, read_token
 from src.enums import ComputerType
 
 
@@ -21,9 +21,10 @@ async def create_computer(
     status: str,
     controller: ManagerController = Depends(get_manager_controller),
     session: AsyncSession = Depends(get_rbac_session),
+    token: dict = Depends(read_token),
 ) -> Response:
     model = await controller.create_computer(
-        session, inventory_number, computer_type, purchase_date, status
+        session, token, inventory_number, computer_type, purchase_date, status
     )
     return JSONResponse(
         content={
@@ -48,9 +49,10 @@ async def create_computer_assignment(
     end_date: datetime | None = None,
     controller: ManagerController = Depends(get_manager_controller),
     session: AsyncSession = Depends(get_rbac_session),
+    token: dict = Depends(read_token),
 ) -> Response:
     model = await controller.create_computer_assignment(
-        session, computer_id, dept_id, start_date, end_date, doc_number, doc_date, doc_type
+        session, token, computer_id, dept_id, start_date, end_date, doc_number, doc_date, doc_type
     )
     return JSONResponse(
         content={
@@ -72,8 +74,9 @@ async def delete_computer(
     computer_id: int,
     controller: ManagerController = Depends(get_manager_controller),
     session: AsyncSession = Depends(get_rbac_session),
+    token: dict = Depends(read_token),
 ) -> Response:
-    await controller.delete_computer(session, computer_id)
+    await controller.delete_computer(session, token, computer_id)
     return Response(status_code=st.HTTP_204_NO_CONTENT)
 
 
@@ -86,9 +89,10 @@ async def create_software(
     manufacturer: str,
     controller: ManagerController = Depends(get_manager_controller),
     session: AsyncSession = Depends(get_rbac_session),
+    token: dict = Depends(read_token),
 ) -> Response:
     model = await controller.create_software(
-        session, sw_type_id, code, name, short_name, manufacturer
+        session, token, sw_type_id, code, name, short_name, manufacturer
     )
     return JSONResponse(
         content={
@@ -113,9 +117,10 @@ async def create_license(
     price_per_unit: float,
     controller: ManagerController = Depends(get_manager_controller),
     session: AsyncSession = Depends(get_rbac_session),
+    token: dict = Depends(read_token),
 ) -> Response:
     model = await controller.create_license(
-        session, software_id, vendor_id, start_date, end_date, price_per_unit
+        session, token, software_id, vendor_id, start_date, end_date, price_per_unit
     )
     return JSONResponse(
         content={
@@ -139,8 +144,11 @@ async def create_installation(
     install_date: datetime,
     controller: ManagerController = Depends(get_manager_controller),
     session: AsyncSession = Depends(get_rbac_session),
+    token: dict = Depends(read_token),
 ) -> Response:
-    model = await controller.create_installation(session, license_id, computer_id, install_date)
+    model = await controller.create_installation(
+        session, token, license_id, computer_id, install_date
+    )
     return JSONResponse(
         content={
             "installation_id": model.installation_id,
@@ -157,8 +165,9 @@ async def get_computer_installed_software(
     computer_id: int,
     controller: ManagerController = Depends(get_manager_controller),
     session: AsyncSession = Depends(get_rbac_session),
+    token: dict = Depends(read_token),
 ) -> Response:
-    models = await controller.get_computer_software(session, computer_id)
+    models = await controller.get_computer_software(session, token, computer_id)
     return JSONResponse(
         content=[
             {
@@ -184,8 +193,9 @@ async def create_vendor(
     website: str | None = None,
     controller: ManagerController = Depends(get_manager_controller),
     session: AsyncSession = Depends(get_rbac_session),
+    token: dict = Depends(read_token),
 ) -> Response:
-    model = await controller.create_vendor(session, name, address, phone, website)
+    model = await controller.create_vendor(session, token, name, address, phone, website)
     return JSONResponse(
         content={
             "vendor_id": model.vendor_id,
@@ -203,8 +213,9 @@ async def generate_report_with_installed_software(
     date: datetime,
     controller: ManagerController = Depends(get_manager_controller),
     session: AsyncSession = Depends(get_rbac_session),
+    token: dict = Depends(read_token),
 ) -> Response:
-    data = await controller.gen_installed_sw_report(session, date)
+    data = await controller.gen_installed_sw_report(session, token, date)
     return JSONResponse(content=data, status_code=st.HTTP_200_OK)
 
 
@@ -213,8 +224,9 @@ async def generate_report_with_counted_software_licenses(
     date: datetime,
     controller: ManagerController = Depends(get_manager_controller),
     session: AsyncSession = Depends(get_rbac_session),
+    token: dict = Depends(read_token),
 ) -> Response:
-    data = await controller.gen_counted_sw_licenses_report(session, date)
+    data = await controller.gen_counted_sw_licenses_report(session, token, date)
     return JSONResponse(content=data, status_code=st.HTTP_200_OK)
 
 
@@ -223,6 +235,7 @@ async def generate_report_with_counted_department_computers(
     date: datetime,
     controller: ManagerController = Depends(get_manager_controller),
     session: AsyncSession = Depends(get_rbac_session),
+    token: dict = Depends(read_token),
 ) -> Response:
-    data = await controller.gen_counted_depts_comps_report(session, date)
+    data = await controller.gen_counted_depts_comps_report(session, token, date)
     return JSONResponse(content=data, status_code=st.HTTP_200_OK)
