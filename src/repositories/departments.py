@@ -12,6 +12,10 @@ logger = get_logger()
 
 
 class DepartmentRepo:
+    async def get_all(self, session: AsyncSession) -> list[Department]:
+        query = select(Department)
+        return (await session.scalars(query)).all()
+
     async def get_by_id(self, session: AsyncSession, dept_id: int) -> Department:
         query = select(Department).where(Department.dept_id == dept_id)
         return await session.scalar(query)

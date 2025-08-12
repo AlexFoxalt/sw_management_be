@@ -10,6 +10,10 @@ logger = get_logger()
 
 
 class VendorRepo:
+    async def get_all(self, session: AsyncSession) -> list[Vendor]:
+        query = select(Vendor)
+        return (await session.scalars(query)).all()
+
     async def get_by_id(self, session: AsyncSession, vendor_id: int) -> Vendor:
         query = select(Vendor).where(Vendor.vendor_id == vendor_id)
         return await session.scalar(query)

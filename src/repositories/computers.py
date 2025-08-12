@@ -4,13 +4,19 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
 from src.logger import get_logger
-from src.models import Computer, Installation, License, Software
+from src.models import Computer, ComputerAssignment, Installation, License, Software
 
 
 logger = get_logger()
 
 
 class ComputerRepo:
+    async def get_all(self, session: AsyncSession) -> list[Computer]:
+        query = select(Computer).options(
+            joinedload(Computer.assignment).subqueryload(ComputerAssignment.department)
+        )
+        return (await session.scalars(query)).unique().all()
+
     async def get_by_id(self, session: AsyncSession, computer_id: int) -> Computer:
         query = select(Computer).where(Computer.computer_id == computer_id)
         return await session.scalar(query)

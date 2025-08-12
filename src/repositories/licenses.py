@@ -13,8 +13,16 @@ logger = get_logger()
 
 
 class LicenseRepo:
+    async def get_all(self, session: AsyncSession) -> list[License]:
+        query = select(License).options(joinedload(License.software), joinedload(License.vendor))
+        return (await session.scalars(query)).all()
+
     async def get_by_id(self, session: AsyncSession, license_id: int) -> License:
-        query = select(License).where(License.license_id == license_id)
+        query = (
+            select(License)
+            .where(License.license_id == license_id)
+            .options(joinedload(License.software), joinedload(License.vendor))
+        )
         return await session.scalar(query)
 
     async def get_expiring(

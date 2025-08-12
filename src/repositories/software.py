@@ -13,6 +13,10 @@ logger = get_logger()
 
 
 class SoftwareRepo:
+    async def get_all(self, session: AsyncSession) -> list[Software]:
+        query = select(Software).options(joinedload(Software.sw_type))
+        return (await session.scalars(query)).all()
+
     async def get_by_id(self, session: AsyncSession, software_id: int) -> Software:
         query = select(Software).where(Software.software_id == software_id)
         return await session.scalar(query)

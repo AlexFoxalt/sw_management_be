@@ -10,6 +10,10 @@ logger = get_logger()
 
 
 class UserRepo:
+    async def get_all(self, session: AsyncSession) -> list[User]:
+        query = select(User)
+        return (await session.scalars(query)).all()
+
     async def get_by_username(self, session: AsyncSession, username: str) -> User:
         query = select(User).where(User.username == username)
         return await session.scalar(query)

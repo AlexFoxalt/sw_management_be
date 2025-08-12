@@ -10,6 +10,28 @@ from src.enums import UserRole
 router = APIRouter(prefix="/api", tags=["Admin"])
 
 
+@router.get("/users")
+async def get_users(
+    controller: AdminController = Depends(get_admin_controller),
+    session: AsyncSession = Depends(get_rbac_session),
+    token: dict = Depends(read_token),
+) -> Response:
+    models = await controller.get_all_users(session, token)
+    return JSONResponse(
+        content=[
+            {
+                "username": model.username,
+                "user_id": model.user_id,
+                "role": model.role.value,
+                "full_name": model.full_name,
+                "you": True if model.user_id == token["user_id"] else False,
+            }
+            for model in models
+        ],
+        status_code=status.HTTP_200_OK,
+    )
+
+
 @router.post("/users")
 async def create_user(
     username: str,

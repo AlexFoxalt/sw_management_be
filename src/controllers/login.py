@@ -22,15 +22,14 @@ class LoginController:
         hashed_pass = sha256(password.encode()).hexdigest()
         if hashed_pass != user.password:
             raise ServiceForbidden("Incorrect username or password")
-        token = self._create_jwt_token(
-            {
-                "username": user.username,
-                "user_id": user.user_id,
-                "role": user.role.value,
-                "full_name": user.full_name,
-            }
-        )
-        return {"token": token, "refreshToken": ""}
+        user_data = {
+            "username": user.username,
+            "user_id": user.user_id,
+            "role": user.role.value,
+            "full_name": user.full_name,
+        }
+        token = self._create_jwt_token(user_data)
+        return {"token": token, "refreshToken": "", **user_data}
 
     def _create_jwt_token(self, data: dict, expires_delta: timedelta = timedelta(hours=1)):
         to_encode = data.copy()

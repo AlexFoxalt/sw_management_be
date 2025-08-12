@@ -15,4 +15,6 @@ class Computer(Base):
     status = Column(String, nullable=False, default="active")
 
     installations = relationship("Installation", cascade="all,delete", back_populates="computer")
-    assignment = relationship("ComputerAssignment", cascade="all,delete", back_populates="computer")
+    assignment = relationship(
+        "ComputerAssignment", cascade="all,delete", back_populates="computer", uselist=False
+    )

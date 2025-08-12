@@ -12,6 +12,7 @@ from src.models import (
     Installation,
     License,
     Software,
+    SoftwareType,
     Vendor,
 )
 from src.repositories.audit_logs import AuditLogRepo
@@ -49,6 +50,72 @@ class ManagerController:
         self._licenses = licenses
         self._installations = installations
         self._audit_logs = audit_logs
+
+    async def get_all_sw_types(self, session: AsyncSession, token: dict) -> list[SoftwareType]:
+        try:
+            models = await self._software_types.get_all(session)
+            await self._audit_logs.create(
+                session, AuditLog(user_id=token["user_id"], action="All Software types retrieved")
+            )
+        except ValueError as err:
+            raise ServiceConflict(err) from err
+        await session.commit()
+        return models
+
+    async def get_all_software(self, session: AsyncSession, token: dict) -> list[Software]:
+        try:
+            models = await self._software.get_all(session)
+            await self._audit_logs.create(
+                session, AuditLog(user_id=token["user_id"], action="All Software retrieved")
+            )
+        except ValueError as err:
+            raise ServiceConflict(err) from err
+        await session.commit()
+        return models
+
+    async def get_all_computers(self, session: AsyncSession, token: dict) -> list[Computer]:
+        try:
+            models = await self._computers.get_all(session)
+            await self._audit_logs.create(
+                session, AuditLog(user_id=token["user_id"], action="All computers retrieved")
+            )
+        except ValueError as err:
+            raise ServiceConflict(err) from err
+        await session.commit()
+        return models
+
+    async def get_all_vendors(self, session: AsyncSession, token: dict) -> list[Vendor]:
+        try:
+            models = await self._vendors.get_all(session)
+            await self._audit_logs.create(
+                session, AuditLog(user_id=token["user_id"], action="All vendors retrieved")
+            )
+        except ValueError as err:
+            raise ServiceConflict(err) from err
+        await session.commit()
+        return models
+
+    async def get_all_licenses(self, session: AsyncSession, token: dict) -> list[License]:
+        try:
+            models = await self._licenses.get_all(session)
+            await self._audit_logs.create(
+                session, AuditLog(user_id=token["user_id"], action="All licenses retrieved")
+            )
+        except ValueError as err:
+            raise ServiceConflict(err) from err
+        await session.commit()
+        return models
+
+    async def get_all_installations(self, session: AsyncSession, token: dict) -> list[Installation]:
+        try:
+            models = await self._installations.get_all(session)
+            await self._audit_logs.create(
+                session, AuditLog(user_id=token["user_id"], action="All installations retrieved")
+            )
+        except ValueError as err:
+            raise ServiceConflict(err) from err
+        await session.commit()
+        return models
 
     async def create_computer(
         self,
@@ -227,7 +294,7 @@ class ManagerController:
                 session,
                 AuditLog(
                     user_id=token["user_id"],
-                    action=f"Installation created: {license_model.software} on {computer.inventory_number}",
+                    action=f"Installation created: {license_model.software.name} on {computer.inventory_number}",
                 ),
             )
         except ValueError as err:

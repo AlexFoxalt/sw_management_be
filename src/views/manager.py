@@ -13,6 +13,162 @@ from src.enums import ComputerType
 router = APIRouter(prefix="/api", tags=["Manager"])
 
 
+@router.get("/computers")
+async def get_computers(
+    controller: ManagerController = Depends(get_manager_controller),
+    session: AsyncSession = Depends(get_rbac_session),
+    token: dict = Depends(read_token),
+) -> Response:
+    models = await controller.get_all_computers(session, token)
+    return JSONResponse(
+        content=[
+            {
+                "computer_id": model.computer_id,
+                "inventory_number": model.inventory_number,
+                "computer_type": model.computer_type.value,
+                "purchase_date": model.purchase_date.isoformat(),
+                "status": model.status,
+                "assigned_dept": {
+                    "dept_id": model.assignment.department.dept_id,
+                    "dept_name": model.assignment.department.dept_name,
+                    "dept_code": model.assignment.department.dept_code,
+                    "dept_short_name": model.assignment.department.dept_short_name,
+                }
+                if model.assignment
+                else None,
+            }
+            for model in models
+        ],
+        status_code=st.HTTP_200_OK,
+    )
+
+
+@router.get("/softwareTypes")
+async def get_software_types(
+    controller: ManagerController = Depends(get_manager_controller),
+    session: AsyncSession = Depends(get_rbac_session),
+    token: dict = Depends(read_token),
+) -> Response:
+    models = await controller.get_all_sw_types(session, token)
+    return JSONResponse(
+        content=[{"name": model.name, "sw_type_id": model.sw_type_id} for model in models],
+        status_code=st.HTTP_200_OK,
+    )
+
+
+@router.get("/software")
+async def get_software(
+    controller: ManagerController = Depends(get_manager_controller),
+    session: AsyncSession = Depends(get_rbac_session),
+    token: dict = Depends(read_token),
+) -> Response:
+    models = await controller.get_all_software(session, token)
+    return JSONResponse(
+        content=[
+            {
+                "software_id": model.software_id,
+                "sw_type_id": model.sw_type_id,
+                "sw_type_name": model.sw_type.name,
+                "code": model.code,
+                "name": model.name,
+                "short_name": model.short_name,
+                "manufacturer": model.manufacturer,
+            }
+            for model in models
+        ],
+        status_code=st.HTTP_200_OK,
+    )
+
+
+@router.get("/vendors")
+async def get_vendors(
+    controller: ManagerController = Depends(get_manager_controller),
+    session: AsyncSession = Depends(get_rbac_session),
+    token: dict = Depends(read_token),
+) -> Response:
+    models = await controller.get_all_vendors(session, token)
+    return JSONResponse(
+        content=[
+            {
+                "vendor_id": model.vendor_id,
+                "name": model.name,
+                "address": model.address,
+                "phone": model.phone,
+                "website": model.website,
+            }
+            for model in models
+        ],
+        status_code=st.HTTP_200_OK,
+    )
+
+
+@router.get("/licenses")
+async def get_licenses(
+    controller: ManagerController = Depends(get_manager_controller),
+    session: AsyncSession = Depends(get_rbac_session),
+    token: dict = Depends(read_token),
+) -> Response:
+    models = await controller.get_all_licenses(session, token)
+    return JSONResponse(
+        content=[
+            {
+                "license_id": model.license_id,
+                "software_id": model.software_id,
+                "software_name": model.software.name,
+                "vendor_id": model.vendor_id,
+                "vendor_name": model.vendor.name,
+                "start_date": model.start_date.isoformat(),
+                "end_date": model.end_date.isoformat(),
+                "price_per_unit": model.price_per_unit,
+            }
+            for model in models
+        ],
+        status_code=st.HTTP_200_OK,
+    )
+
+
+@router.get("/installations")
+async def get_installations(
+    controller: ManagerController = Depends(get_manager_controller),
+    session: AsyncSession = Depends(get_rbac_session),
+    token: dict = Depends(read_token),
+) -> Response:
+    models = await controller.get_all_installations(session, token)
+    return JSONResponse(
+        content=[
+            {
+                "installation_id": model.installation_id,
+                "license_id": model.license_id,
+                "computer_id": model.computer_id,
+                "install_date": model.install_date.isoformat(),
+                "license": {
+                    "license_id": model.license.license_id,
+                    "software_id": model.license.software_id,
+                    "software_name": model.license.software.name,
+                    "vendor_id": model.license.vendor_id,
+                    "vendor_name": model.license.vendor.name,
+                    "start_date": model.license.start_date.isoformat(),
+                    "end_date": model.license.end_date.isoformat(),
+                    "price_per_unit": model.license.price_per_unit,
+                }
+                if model.license
+                else None,
+                "computer": {
+                    "computer_id": model.computer_id,
+                    "inventory_number": model.computer.inventory_number,
+                    "computer_type": model.computer.computer_type.value,
+                    "purchase_date": model.computer.purchase_date.isoformat(),
+                    "status": model.computer.status,
+                }
+                if model.computer
+                else None,
+            }
+            for model in models
+        ],
+        status_code=st.HTTP_200_OK,
+    )
+
+
 @router.post("/computers")
 async def create_computer(
     inventory_number: str,
@@ -155,6 +311,27 @@ async def create_installation(
             "license_id": model.license_id,
             "computer_id": model.computer_id,
             "install_date": model.install_date.isoformat(),
+            "license": {
+                "license_id": model.license.license_id,
+                "software_id": model.license.software_id,
+                "software_name": model.license.software.name,
+                "vendor_id": model.license.vendor_id,
+                "vendor_name": model.license.vendor.name,
+                "start_date": model.license.start_date.isoformat(),
+                "end_date": model.license.end_date.isoformat(),
+                "price_per_unit": model.license.price_per_unit,
+            }
+            if model.license
+            else None,
+            "computer": {
+                "computer_id": model.computer_id,
+                "inventory_number": model.computer.inventory_number,
+                "computer_type": model.computer.computer_type.value,
+                "purchase_date": model.computer.purchase_date.isoformat(),
+                "status": model.computer.status,
+            }
+            if model.computer
+            else None,
         },
         status_code=st.HTTP_201_CREATED,
     )

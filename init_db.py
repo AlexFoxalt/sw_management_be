@@ -15,8 +15,6 @@ def preview_ddl():
         ddl = str(CreateTable(table).compile(dialect=engine.dialect))
         print(f"\n-- DDL for table `{table.name}` --")
         print(ddl)
-        print("-- End of DDL --")
-
 
 async def create_tables():
     async with engine.begin() as conn:
@@ -25,4 +23,4 @@ async def create_tables():
 
 if __name__ == "__main__":
     preview_ddl()
-    asyncio.run(create_tables())
+    # asyncio.run(create_tables())

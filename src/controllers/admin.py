@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from settings import Settings
 from src.enums import UserRole
 from src.exceptions import ServiceConflict, ServiceNotFound
-from src.models import AuditLog, SoftwareType, User
+from src.models import AuditLog, Department, SoftwareType, User
 from src.repositories.audit_logs import AuditLogRepo
 from src.repositories.software_types import SoftwareTypeRepo
 from src.repositories.users import UserRepo
@@ -23,6 +23,28 @@ class AdminController:
         self._users = users
         self._sw_types = sw_types
         self._audit_logs = audit_logs
+
+    async def get_all_users(self, session: AsyncSession, token: dict) -> list[User]:
+        try:
+            models = await self._users.get_all(session)
+            await self._audit_logs.create(
+                session, AuditLog(user_id=token["user_id"], action="All users retrieved")
+            )
+        except ValueError as err:
+            raise ServiceConflict(err) from err
+        await session.commit()
+        return models
+
+    async def get_all_depts(self, session: AsyncSession, token: dict) -> list[Department]:
+        try:
+            models = await self._departments.get_all(session)
+            await self._audit_logs.create(
+                session, AuditLog(user_id=token["user_id"], action="All departments retrieved")
+            )
+        except ValueError as err:
+            raise ServiceConflict(err) from err
+        await session.commit()
+        return models
 
     async def create_user(
         self,

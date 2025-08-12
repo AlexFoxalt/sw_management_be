@@ -13,6 +13,15 @@ logger = get_logger()
 
 
 class InstallationRepo:
+    async def get_all(self, session: AsyncSession) -> list[Installation]:
+        query = select(Installation).options(
+            joinedload(Installation.license).subqueryload(License.vendor),
+            joinedload(Installation.license).subqueryload(License.software),
+            joinedload(Installation.computer),
+        )
+        result = await session.scalars(query)
+        return result.unique().all()
+
     async def get_by_id(self, session: AsyncSession, installation_id: int) -> Installation:
         query = select(Installation).where(Installation.installation_id == installation_id)
         return await session.scalar(query)

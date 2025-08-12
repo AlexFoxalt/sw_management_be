@@ -8,7 +8,7 @@ from src.controllers.admin import AdminController
 from src.controllers.login import LoginController
 from src.controllers.manager import ManagerController
 from src.controllers.supervisor import SupervisorController
-from src.exceptions import ServiceConflict, ServiceUnauthorized
+from src.exceptions import ServiceConflict, ServiceForbidden
 from src.repositories.audit_logs import AuditLogRepo
 from src.repositories.computer_assignments import ComputerAssignmentRepo
 from src.repositories.computers import ComputerRepo
@@ -87,9 +87,9 @@ def read_token(auth_token: HTTPAuthorizationCredentials = Depends(HTTPBearer()))
             auth_token.credentials, settings.jwt_secret, algorithms=[settings.jwt_algorithm]
         )
     except jwt.ExpiredSignatureError as err:
-        raise ServiceUnauthorized("Token expired") from err
+        raise ServiceForbidden("Token expired") from err
     except jwt.InvalidTokenError as err:
-        raise ServiceUnauthorized("Invalid token") from err
+        raise ServiceForbidden("Invalid token") from err
     return payload
 
 

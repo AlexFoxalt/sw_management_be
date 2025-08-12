@@ -12,6 +12,27 @@ from src.dependencies import get_rbac_session, get_supervisor_controller, read_t
 router = APIRouter(prefix="/api", tags=["Supervisor"])
 
 
+@router.get("/departments")
+async def get_departments(
+    controller: SupervisorController = Depends(get_supervisor_controller),
+    session: AsyncSession = Depends(get_rbac_session),
+    token: dict = Depends(read_token),
+) -> Response:
+    models = await controller.get_all_depts(session, token)
+    return JSONResponse(
+        content=[
+            {
+                "dept_id": model.dept_id,
+                "dept_name": model.dept_name,
+                "dept_code": model.dept_code,
+                "dept_short_name": model.dept_short_name,
+            }
+            for model in models
+        ],
+        status_code=st.HTTP_200_OK,
+    )
+
+
 @router.get("/departments/installedSoftware/{dept_id}")
 async def get_department_installed_software(
     dept_id: int,

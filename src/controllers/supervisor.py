@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from settings import Settings
 from src.exceptions import ServiceConflict, ServiceNotFound
-from src.models import AuditLog, Computer, License, Software
+from src.models import AuditLog, Computer, Department, License, Software
 from src.repositories.audit_logs import AuditLogRepo
 from src.repositories.departments import DepartmentRepo
 from src.repositories.licenses import LicenseRepo
@@ -22,6 +22,17 @@ class SupervisorController:
         self._departments = departments
         self._licenses = licenses
         self._audit_logs = audit_logs
+
+    async def get_all_depts(self, session: AsyncSession, token: dict) -> list[Department]:
+        try:
+            models = await self._departments.get_all(session)
+            await self._audit_logs.create(
+                session, AuditLog(user_id=token["user_id"], action="All departments retrieved")
+            )
+        except ValueError as err:
+            raise ServiceConflict(err) from err
+        await session.commit()
+        return models
 
     async def get_dept_installed_sw(
         self, session: AsyncSession, token: dict, dept_id: int
