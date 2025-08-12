@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import desc, select
 from sqlalchemy.exc import IntegrityError, ProgrammingError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
@@ -12,7 +12,12 @@ logger = get_logger()
 
 class AuditLogRepo:
     async def get_many(self, session: AsyncSession, limit: int = 50) -> list[AuditLog]:
-        query = select(AuditLog).options(joinedload(AuditLog.user)).limit(limit)
+        query = (
+            select(AuditLog)
+            .options(joinedload(AuditLog.user))
+            .order_by(desc(AuditLog.action_time))
+            .limit(limit)
+        )
         try:
             models = (await session.scalars(query)).all()
         except ProgrammingError as err:
